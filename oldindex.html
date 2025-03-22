@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wiki Dashboard</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; display: flex; flex-direction: column; height: 100vh; }
+        .top-bar { width: 100%; height: 120px; background-color: #333; display: flex; justify-content: center; align-items: center; }
+        .top-bar img { max-height: 100%; max-width: 100%; }
+        .container { display: flex; flex: 1; }
+        .sidebar { width: 250px; background-color: #222; color: white; padding: 15px; }
+        .sidebar h3 { margin-top: 0; }
+        .sidebar button, .sidebar a { display: block; width: 100%; margin: 10px 0; padding: 10px; background-color: #444; color: white; border: none; text-align: left; cursor: pointer; text-decoration: none; }
+        .sidebar button:hover, .sidebar a:hover { background-color: #555; }
+        .content { flex: 1; padding: 20px; background: white; }
+        #content-display { min-height: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <img src="banner.jpg" alt="Banner">
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <h3>Manage Pages</h3>
+            <button onclick="createPage()">Create Page</button>
+            <button onclick="editPage()">Edit Page</button>
+            <button onclick="deletePage()">Delete Page</button>
+            <h3>Pages</h3>
+            <div id="page-list">
+                <!-- Pages loaded here -->
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="content-display">Select a page to view its content.</div>
+        </div>
+    </div>
+
+    <script>
+        const apiBase = "http://192.168.1.30:8080/api/wiki/";
+
+        async function loadPages() {
+            const pageList = document.getElementById("page-list");
+            pageList.innerHTML = "";
+
+            try {
+                let response = await fetch(apiBase);
+                let pages = await response.json(); // Assuming API returns list of pages
+
+                pages.forEach(page => {
+                    const link = document.createElement("a");
+                    link.textContent = page;
+                    link.href = "#";
+                    link.onclick = () => loadPage(page);
+                    pageList.appendChild(link);
+                });
+            } catch (error) {
+                console.error("Error loading pages:", error);
+            }
+        }
+
+        async function loadPage(page) {
+            try {
+                let response = await fetch(apiBase + page);
+                if (!response.ok) throw new Error("Page not found");
+
+                let html = await response.text();
+                document.getElementById("content-display").innerHTML = html;
+            } catch (error) {
+                document.getElementById("content-display").innerHTML = `<p style="color:red;">Error loading page: ${error.message}</p>`;
+            }
+        }
+
+        async function createPage() {
+            let pageName = prompt("Enter new page name:");
+            if (!pageName) return;
+
+            let content = prompt("Enter page content (HTML allowed):", "<h1>New Page</h1>");
+            if (content === null) return;
+
+            try {
+                let response = await fetch(apiBase + pageName, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/html" },
+                    body: content
+                });
+
+                if (!response.ok) throw new Error("Failed to create page");
+                alert("Page created!");
+                loadPages();
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
+
+        async function editPage() {
+            let pageName = prompt("Enter page name to edit:");
+            if (!pageName) return;
+
+            try {
+                let response = await fetch(apiBase + pageName);
+                if (!response.ok) throw new Error("Page not found");
+
+                let oldContent = await response.text();
+                let newContent = prompt("Edit page content:", oldContent);
+                if (newContent === null) return;
+
+                let updateResponse = await fetch(apiBase + pageName, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/html" },
+                    body: newContent
+                });
+
+                if (!updateResponse.ok) throw new Error("Failed to update page");
+                alert("Page updated!");
+                loadPage(pageName);
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
+
+        async function deletePage() {
+            let pageName = prompt("Enter page name to delete:");
+            if (!pageName) return;
+
+            let confirmDelete = confirm(`Are you sure you want to delete "${pageName}"?`);
+            if (!confirmDelete) return;
+
+            try {
+                let response = await fetch(apiBase + pageName, { method: "DELETE" });
+                if (!response.ok) throw new Error("Failed to delete page");
+
+                alert("Page deleted!");
+                document.getElementById("content-display").innerHTML = "Select a page to view its content.";
+                loadPages();
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
+
+        loadPages();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,81 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.top-bar {
+    width: 100%;
+    height: 240px;
+    background-color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.top-bar img {
+    max-height: 100%;
+    max-width: auto;
+    object-fit: cover;
+}
+
+.container {
+    display: flex;
+    flex: 1;
+    margin-top: 240px; /* Avoid overlap with the fixed top bar */
+}
+
+.sidebar {
+    width: 230px;
+    background-color: #222;
+    color: white;
+    padding: 15px;
+    overflow-y: auto;
+    position: fixed;
+    top: 240px;
+    z-index: 1000;
+}
+
+.sidebar h3 {
+    margin-top: 0;
+}
+
+.sidebar button,
+.sidebar a {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #444;
+    color: white;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.sidebar button:hover,
+.sidebar a:hover {
+    background-color: #555;
+}
+
+.content {
+    flex: 1;
+    padding: 20px;
+    background: white;
+    margin-left: 250px; /* Account for the sidebar */
+    overflow-y: auto;
+}
+
+#content-display {
+    width: 100%;
+    height: 500px;  /* Set a fixed height for iframe */
+    border: 1px solid #ccc;
+    overflow-y: auto; /* Keeps scrolling inside iframe */
+}
